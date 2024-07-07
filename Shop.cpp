@@ -8,6 +8,7 @@ string KEY = "SECRETKEY"; // Encryption key
 string encrypt(string data)
 {
     cout << "Encrypting data...." << endl;
+
     for (int i = 0; i < data.length(); i++)
     {
         data[i] = data[i] ^ KEY[i % KEY.length()];
@@ -31,19 +32,14 @@ bool userExists(string username)
     fstream userFile;
     userFile.open("Users.txt", ios::in);
 
-    string line;
+    string storedUsername, storedPassword;
 
     if (userFile.is_open())
     {
         cout << "Checking if user exists..." << endl;
 
-        while (getline(userFile, line))
+        while (userFile >> storedUsername >> storedPassword)
         {
-            stringstream ss(line);
-            string storedUsername;
-
-            ss >> storedUsername;
-
             string decryptedUsername = decrypt(storedUsername);
 
             if (decryptedUsername == username)
@@ -93,18 +89,14 @@ bool adminExists(string username)
     fstream adminFile;
     adminFile.open("Admins.txt", ios::in);
 
-    string line;
+    string storedUsername, storedPassword;
 
     if (adminFile.is_open())
     {
         cout << "Checking if admin exists..." << endl;
 
-        while (getline(adminFile, line))
+        while (adminFile >> storedUsername >> storedPassword)
         {
-            stringstream ss(line);
-            string storedUsername;
-            ss >> storedUsername;
-
             string decryptedUsername = decrypt(storedUsername);
 
             if (decryptedUsername == username)
@@ -118,33 +110,6 @@ bool adminExists(string username)
     return false;
 }
 
-/*
-bool authenticateAdmin(string username, string password)
-{
-    fstream adminFile;
-    adminFile.open("admins.txt", ios::in);
-    string storedUsername, storedPassword;
-    if (adminFile.is_open())
-    {
-        cout << "Authenticating admin..." << endl;
-        while (adminFile >> storedUsername >> storedPassword)
-        {
-            string decryptedUsername = decrypt(storedUsername);
-            string decryptedPassword = decrypt(storedPassword);
-            if (decryptedUsername == username && decryptedPassword == password)
-            {
-                adminFile.close();
-                cout << "Admin authentication successful." << endl;
-                return true;
-            }
-        }
-        adminFile.close();
-        cout << "Admin authentication failed." << endl;
-    }
-    return false;
-}
-
-*/
 void adminSignUp()
 {
     string username, password;
@@ -177,34 +142,36 @@ void adminSignUp()
 
 bool authenticateAdmin(string username, string password)
 {
-    fstream adminFile("Admins.txt", ios::in);
+    fstream adminFile;
+
+    adminFile.open("admins.txt", ios::in);
+
     string storedUsername, storedPassword;
 
     if (adminFile.is_open())
     {
-        string line;
+        cout << "Authenticating admin..." << endl;
 
-        while (getline(adminFile, line))
+        while (adminFile >> storedUsername >> storedPassword)
         {
-            stringstream ss(line);
+            string decryptedUsername = decrypt(storedUsername);
+            string decryptedPassword = decrypt(storedPassword);
 
-            if (getline(ss, storedUsername, ' ') && getline(ss, storedPassword))
+            if (decryptedUsername == username && decryptedPassword == password)
             {
-                string decryptedUsername = decrypt(storedUsername);
-                string decryptedPassword = decrypt(storedPassword);
+                adminFile.close();
 
-                if (decryptedUsername == username && decryptedPassword == password)
-                {
-                    adminFile.close();
-                    return true;
-                }
+                cout << "Admin authentication successful." << endl;
+                return true;
             }
         }
         adminFile.close();
-    }
 
+        cout << "Admin authentication failed." << endl;
+    }
     return false;
 }
+
 bool adminLogin()
 {
     string username, password;
@@ -246,21 +213,17 @@ bool adminLogin()
 void listUsers()
 {
     fstream userFile;
-
     userFile.open("Users.txt", ios::in);
-    string line;
+
+    string encryptedUsername, encryptedPassword;
 
     cout << "List of users:" << endl;
     cout << "-------------" << endl;
 
     if (userFile.is_open())
     {
-        while (getline(userFile, line))
+        while (userFile >> encryptedUsername >> encryptedPassword)
         {
-            stringstream ss(line);
-            string encryptedUsername;
-            ss >> encryptedUsername;
-
             string username = decrypt(encryptedUsername);
             cout << username << endl;
         }
@@ -273,21 +236,20 @@ void removeUser(string usernameToRemove)
 {
     fstream inFile("Users.txt", ios::in);
     fstream outFile("Temp.txt", ios::out);
-    string line;
+
+    string encryptedUsername, encryptedPassword;
+
     bool userFound = false;
 
     if (inFile.is_open() && outFile.is_open())
     {
-        while (getline(inFile, line))
+        while (inFile >> encryptedUsername >> encryptedPassword)
         {
-            stringstream ss(line);
-            string encryptedUsername;
-            ss >> encryptedUsername;
             string username = decrypt(encryptedUsername);
 
             if (username != usernameToRemove)
             {
-                outFile << line << endl;
+                outFile << encryptedUsername << " " << encryptedPassword << endl;
             }
             else
             {
@@ -302,15 +264,18 @@ void removeUser(string usernameToRemove)
         {
             remove("Users.txt");
             rename("Temp.txt", "Users.txt");
+
             cout << "User '" << usernameToRemove << "' has been removed." << endl;
         }
         else
         {
             remove("Temp.txt");
+
             cout << "User '" << usernameToRemove << "' not found." << endl;
         }
     }
 }
+
 void adminDashboard()
 {
     int choice;
