@@ -1,8 +1,33 @@
 #include <bits/stdc++.h>
-
+#include <conio.h>
 using namespace std;
 
 string KEY = "SECRETKEY"; // Encryption key
+
+string getPasswordInput()
+{
+    string password = "";
+    char ch;
+    cout << "Enter password: ";
+    while ((ch = _getch()) != 13)
+    { // 13 is the ASCII code for Enter
+        if (ch == 8)
+        { // 8 is the ASCII code for Backspace
+            if (!password.empty())
+            {
+                cout << "\b \b";
+                password.pop_back();
+            }
+        }
+        else
+        {
+            password.push_back(ch);
+            cout << '*';
+        }
+    }
+    cout << endl;
+    return password;
+}
 
 // XOR encryption method.
 string encrypt(string data)
@@ -92,8 +117,7 @@ void signUp()
         return;
     }
 
-    cout << "Enter password: ";
-    cin >> password;
+    password = getPasswordInput();
 
     string encryptedUsername = encrypt(username);
     string encryptedPassword = encrypt(password);
@@ -212,8 +236,7 @@ void adminSignUp()
         return;
     }
 
-    cout << "Enter admin password: ";
-    cin >> password;
+    password = getPasswordInput();
 
     string encryptedUsername = encrypt(username);
     string encryptedPassword = encrypt(password);
@@ -244,8 +267,7 @@ bool adminLogin()
     int attempts = 3;
     while (attempts > 0)
     {
-        cout << "Please enter admin password: ";
-        cin >> password;
+        password = getPasswordInput();
 
         if (authenticateAdmin(username, password))
         {
@@ -442,8 +464,7 @@ bool login()
     int attempts = 3;
     while (attempts > 0)
     {
-        cout << "Please enter your password: ";
-        cin >> password;
+        password = getPasswordInput();
 
         if (authenticate(username, password))
         {
