@@ -3,7 +3,7 @@
 
 using namespace std;
 
-string KEY = "SECRETKEY"; // Encryption key
+const string KEY = "SECRETKEY";
 
 string GetPasswordInput()
 {
@@ -30,7 +30,6 @@ string GetPasswordInput()
     return password;
 }
 
-// XOR encryption method.
 string Encrypt(string data)
 {
     cout << "Encrypting data...." << endl;
@@ -42,7 +41,6 @@ string Encrypt(string data)
     return data;
 }
 
-// XOR decryption method.
 string Decrypt(string data)
 {
     cout << "Decrypting data...." << endl;
@@ -53,93 +51,68 @@ string Decrypt(string data)
     return data;
 }
 
-bool UserExists(string username)
+string EncryptDecrypt(string data)
 {
-    fstream userFile;
-    userFile.open("Users.txt", ios::in);
-
-    string storedUsername, storedPassword;
-
-    if (userFile.is_open())
+    for (int i = 0; i < data.length(); i++)
     {
-        cout << "Checking if user exists..." << endl;
-
-        while (userFile >> storedUsername >> storedPassword)
-        {
-            string decryptedUsername = Decrypt(storedUsername);
-
-            if (decryptedUsername == username)
-            {
-                userFile.close();
-                return true;
-            }
-        }
-
-        userFile.close();
+        data[i] = data[i] ^ KEY[i % KEY.length()];
     }
-
-    return false;
-}
-
-void UserSignUp()
-{
-    string username, password;
-    cout << "Enter your name: ";
-    cin >> username;
-
-    if (UserExists(username))
-    {
-        cout << "Username already exists. Choose a different username." << endl;
-        return;
-    }
-
-    password = GetPasswordInput();
-
-    string encryptedUsername = Encrypt(username);
-    string encryptedPassword = Encrypt(password);
-
-    fstream userFile;
-    userFile.open("Users.txt", ios::app);
-
-    if (userFile.is_open())
-    {
-        userFile << encryptedUsername << " " << encryptedPassword << endl;
-        userFile.close();
-        cout << "Sign up successful!" << endl;
-    }
+    return data;
 }
 
 bool AdminExists(string username)
 {
-    fstream adminFile;
-    adminFile.open("Admins.txt", ios::in);
-
-    string storedUsername, storedPassword;
-
-    if (adminFile.is_open())
+    ifstream adminFile("Admins.txt", ios::binary);
+    if (!adminFile.is_open())
     {
-        cout << "Checking if admin exists..." << endl;
-
-        while (adminFile >> storedUsername >> storedPassword)
-        {
-            string decryptedUsername = Decrypt(storedUsername);
-
-            if (decryptedUsername == username)
-            {
-                adminFile.close();
-                return true;
-            }
-        }
-        adminFile.close();
+        cout << "Unable to open Admins.txt for reading" << endl;
+        return false;
     }
+
+    string line, storedUsername;
+    cout << "Checking for username: '" << username << "'" << endl;
+    cout << "File contents:" << endl;
+
+    while (getline(adminFile, line))
+    {
+        cout << "Read line: '" << line << "'" << endl;
+        stringstream ss(line);
+        getline(ss, storedUsername, ',');
+
+        cout << "Encrypted stored username: '" << storedUsername << "'" << endl;
+        string decryptedUsername = EncryptDecrypt(storedUsername);
+        cout << "Decrypted stored username: '" << decryptedUsername << "'" << endl;
+
+        if (decryptedUsername == username)
+        {
+            adminFile.close();
+            cout << "Admin found!" << endl;
+            return true;
+        }
+    }
+
+    if (adminFile.fail() && !adminFile.eof())
+    {
+        cout << "Failed to read file" << endl;
+    }
+    else
+    {
+        cout << "Reached end of file" << endl;
+    }
+
+    adminFile.close();
+    cout << "Admin not found." << endl;
     return false;
 }
 
 void AdminSignUp()
 {
     string username, password;
+
     cout << "Enter admin username: ";
-    cin >> username;
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    getline(cin, username);
+    username.erase(username.find_last_not_of(" \n\r\t") + 1);
 
     if (AdminExists(username))
     {
@@ -148,59 +121,98 @@ void AdminSignUp()
     }
 
     password = GetPasswordInput();
+    password.erase(password.find_last_not_of(" \n\r\t") + 1);
 
     string encryptedUsername = Encrypt(username);
     string encryptedPassword = Encrypt(password);
 
-    fstream adminFile;
-
-    adminFile.open("Admins.txt", ios::app);
-
+    ofstream adminFile("Admins.txt", ios::app | ios::binary);
     if (adminFile.is_open())
     {
-        adminFile << encryptedUsername << " " << encryptedPassword << endl;
+        adminFile << encryptedUsername << "," << encryptedPassword << "\n";
+        if (adminFile.fail())
+        {
+            cout << "Error: Failed to write to file." << endl;
+            adminFile.close();
+            return;
+        }
         adminFile.close();
         cout << "Admin sign up successful!" << endl;
+
+        // Print file contents
+        cout << "File contents after sign up:" << endl;
+        ifstream readFile("Admins.txt", ios::binary);
+        string line;
+        while (getline(readFile, line))
+        {
+            cout << "'" << line << "'" << endl;
+        }
+        if (readFile.fail() && !readFile.eof())
+        {
+            cout << "Error: Failed to read file." << endl;
+        }
+        readFile.close();
+    }
+    else
+    {
+        cout << "Error: Unable to open Admins.txt for writing." << endl;
     }
 }
 
 bool AuthenticateAdmin(string username, string password)
 {
-    fstream adminFile;
+    string filePath = "Admins.txt";
+    ifstream adminFile(filePath, ios::binary);
 
-    adminFile.open("admins.txt", ios::in);
-
-    string storedUsername, storedPassword;
-
-    if (adminFile.is_open())
+    if (!adminFile.is_open())
     {
-        cout << "Authenticating admin..." << endl;
-
-        while (adminFile >> storedUsername >> storedPassword)
-        {
-            string decryptedUsername = Decrypt(storedUsername);
-            string decryptedPassword = Decrypt(storedPassword);
-
-            if (decryptedUsername == username && decryptedPassword == password)
-            {
-                adminFile.close();
-
-                cout << "Admin authentication successful." << endl;
-                return true;
-            }
-        }
-        adminFile.close();
-
-        cout << "Admin authentication failed." << endl;
+        cout << "Error: Unable to open " << filePath << endl;
+        return false;
     }
+
+    string line, storedUsername, storedPassword;
+    while (getline(adminFile, line))
+    {
+        stringstream ss(line);
+        getline(ss, storedUsername, ',');
+        getline(ss, storedPassword);
+
+        // Trim any whitespace from the end of storedPassword
+        storedPassword.erase(storedPassword.find_last_not_of(" \n\r\t") + 1);
+
+        string decryptedUsername = Decrypt(storedUsername);
+        string decryptedPassword = Decrypt(storedPassword);
+
+        // Trim any whitespace from the end of decryptedPassword
+        decryptedPassword.erase(decryptedPassword.find_last_not_of(" \n\r\t") + 1);
+
+        // Debug output
+        cout << "Stored username: " << storedUsername << endl;
+        cout << "Decrypted username: " << decryptedUsername << endl;
+        cout << "Stored password: " << storedPassword << endl;
+        cout << "Decrypted password: " << decryptedPassword << endl;
+
+        if (decryptedUsername == username && decryptedPassword == password)
+        {
+            adminFile.close();
+            return true;
+        }
+    }
+
+    adminFile.close();
     return false;
 }
 
 bool AdminLogin()
 {
     string username, password;
+
     cout << "Enter admin username: ";
-    cin >> username;
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    getline(cin, username);
+    username.erase(username.find_last_not_of(" \n\r\t") + 1);
+
+    cout << "Entered username: '" << username << "'" << endl;
 
     if (!AdminExists(username))
     {
@@ -212,9 +224,13 @@ bool AdminLogin()
     while (attempts > 0)
     {
         password = GetPasswordInput();
+        password.erase(password.find_last_not_of(" \n\r\t") + 1);
+        cout << "Entered password: '" << password << "'" << endl;
 
+        cout << "Attempting to authenticate..." << endl;
         if (AuthenticateAdmin(username, password))
         {
+            cout << "Admin login successful." << endl;
             return true;
         }
         else
@@ -222,7 +238,7 @@ bool AdminLogin()
             attempts--;
             if (attempts > 0)
             {
-                cout << "Incorrect password. You have " << attempts << " attempts left." << endl;
+                cout << "Incorrect credentials. You have " << attempts << " attempts left." << endl;
             }
             else
             {
@@ -469,19 +485,15 @@ void SearchItem(string codeToSearch)
     cout << "----------------------------------------------------" << endl;
 }
 
-void AdminDashboard()
+void UserManagement()
 {
     int choice;
     do
     {
-        cout << "\nAdmin Dashboard" << endl;
+        cout << "\nUser Management" << endl;
         cout << "1. List Users" << endl;
         cout << "2. Remove User" << endl;
-        cout << "3. Add Item" << endl;
-        cout << "4. View Items" << endl;
-        cout << "5. Remove Item" << endl;
-        cout << "6. Search Item" << endl;
-        cout << "7. Back to Admin Menu" << endl;
+        cout << "3. Back to Admin Dashboard" << endl;
         cout << "Enter your choice: ";
         cin >> choice;
 
@@ -495,17 +507,41 @@ void AdminDashboard()
             string usernameToRemove;
             cout << "Enter the username to remove: ";
             cin >> usernameToRemove;
-
             RemoveUser(usernameToRemove);
         }
         break;
         case 3:
+            cout << "Returning to Admin Dashboard..." << endl;
+            break;
+        default:
+            cout << "Invalid choice. Please try again." << endl;
+        }
+    } while (choice != 3);
+}
+
+void ItemManagement()
+{
+    int choice;
+    do
+    {
+        cout << "\nItem Management" << endl;
+        cout << "1. Add Item" << endl;
+        cout << "2. View Items" << endl;
+        cout << "3. Remove Item" << endl;
+        cout << "4. Search Item" << endl;
+        cout << "5. Back to Admin Dashboard" << endl;
+        cout << "Enter your choice: ";
+        cin >> choice;
+
+        switch (choice)
+        {
+        case 1:
             AddItem();
             break;
-        case 4:
+        case 2:
             ViewItems();
             break;
-        case 5:
+        case 3:
         {
             string codeToRemove;
             cout << "Enter the item code to remove: ";
@@ -513,7 +549,7 @@ void AdminDashboard()
             RemoveItem(codeToRemove);
         }
         break;
-        case 6:
+        case 4:
         {
             string codeToSearch;
             cout << "Enter the item code to search: ";
@@ -521,13 +557,41 @@ void AdminDashboard()
             SearchItem(codeToSearch);
         }
         break;
-        case 7:
+        case 5:
+            cout << "Returning to Admin Dashboard..." << endl;
+            break;
+        default:
+            cout << "Invalid choice. Please try again." << endl;
+        }
+    } while (choice != 5);
+}
+void AdminDashboard()
+{
+    int choice;
+    do
+    {
+        cout << "\nAdmin Dashboard" << endl;
+        cout << "1. User Management" << endl;
+        cout << "2. Item Management" << endl;
+        cout << "3. Back to Admin Menu" << endl;
+        cout << "Enter your choice: ";
+        cin >> choice;
+
+        switch (choice)
+        {
+        case 1:
+            UserManagement();
+            break;
+        case 2:
+            ItemManagement();
+            break;
+        case 3:
             cout << "Returning to Admin Menu..." << endl;
             break;
         default:
             cout << "Invalid choice. Please try again." << endl;
         }
-    } while (choice != 7);
+    } while (choice != 3);
 }
 void AdminAccess()
 {
@@ -560,37 +624,159 @@ void AdminAccess()
     } while (choice != 3);
 }
 
-bool AuthenticateUser(string username, string password)
+bool UserExists(string username)
 {
-    fstream userFile;
+    ifstream userFile("Users.txt", ios::binary);
+    if (!userFile.is_open())
+    {
+        cout << "Unable to open Users.txt for reading" << endl;
+        return false;
+    }
 
-    userFile.open("Users.txt", ios::in);
+    string line, storedUsername;
+    cout << "Checking for username: '" << username << "'" << endl;
+    cout << "File contents:" << endl;
 
-    string storedUsername, storedPassword;
+    while (getline(userFile, line))
+    {
+        cout << "Read line: '" << line << "'" << endl;
+        stringstream ss(line);
+        getline(ss, storedUsername, ',');
 
+        cout << "Encrypted stored username: '" << storedUsername << "'" << endl;
+        string decryptedUsername = EncryptDecrypt(storedUsername);
+        cout << "Decrypted stored username: '" << decryptedUsername << "'" << endl;
+
+        if (decryptedUsername == username)
+        {
+            userFile.close();
+            cout << "User found!" << endl;
+            return true;
+        }
+    }
+
+    if (userFile.fail() && !userFile.eof())
+    {
+        cout << "Failed to read file" << endl;
+    }
+    else
+    {
+        cout << "Reached end of file" << endl;
+    }
+
+    userFile.close();
+    cout << "User not found." << endl;
+    return false;
+}
+
+void UserSignUp()
+{
+    string username, password;
+
+    cout << "Enter user username: ";
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    getline(cin, username);
+    username.erase(username.find_last_not_of(" \n\r\t") + 1);
+
+    if (UserExists(username))
+    {
+        cout << "User username already exists. Choose a different username." << endl;
+        return;
+    }
+
+    password = GetPasswordInput();
+    password.erase(password.find_last_not_of(" \n\r\t") + 1);
+
+    string encryptedUsername = Encrypt(username);
+    string encryptedPassword = Encrypt(password);
+
+    ofstream userFile("Users.txt", ios::app | ios::binary);
     if (userFile.is_open())
     {
-        while (userFile >> storedUsername >> storedPassword)
+        userFile << encryptedUsername << "," << encryptedPassword << "\n";
+        if (userFile.fail())
         {
-            string decryptedUsername = Decrypt(storedUsername);
-            string decryptedPassword = Decrypt(storedPassword);
-
-            if (decryptedUsername == username && decryptedPassword == password)
-            {
-                userFile.close();
-                return true;
-            }
+            cout << "Error: Failed to write to file." << endl;
+            userFile.close();
+            return;
         }
         userFile.close();
+        cout << "User sign up successful!" << endl;
+
+        // Print file contents
+        cout << "File contents after sign up:" << endl;
+        ifstream readFile("Users.txt", ios::binary);
+        string line;
+        while (getline(readFile, line))
+        {
+            cout << "'" << line << "'" << endl;
+        }
+        if (readFile.fail() && !readFile.eof())
+        {
+            cout << "Error: Failed to read file." << endl;
+        }
+        readFile.close();
     }
+    else
+    {
+        cout << "Error: Unable to open Users.txt for writing." << endl;
+    }
+}
+
+bool AuthenticateUser(string username, string password)
+{
+    string filePath = "Users.txt";
+    ifstream userFile(filePath, ios::binary);
+
+    if (!userFile.is_open())
+    {
+        cout << "Error: Unable to open " << filePath << endl;
+        return false;
+    }
+
+    string line, storedUsername, storedPassword;
+    while (getline(userFile, line))
+    {
+        stringstream ss(line);
+        getline(ss, storedUsername, ',');
+        getline(ss, storedPassword);
+
+        // Trim any whitespace from the end of storedPassword
+        storedPassword.erase(storedPassword.find_last_not_of(" \n\r\t") + 1);
+
+        string decryptedUsername = Decrypt(storedUsername);
+        string decryptedPassword = Decrypt(storedPassword);
+
+        // Trim any whitespace from the end of decryptedPassword
+        decryptedPassword.erase(decryptedPassword.find_last_not_of(" \n\r\t") + 1);
+
+        // Debug output
+        cout << "Stored username: " << storedUsername << endl;
+        cout << "Decrypted username: " << decryptedUsername << endl;
+        cout << "Stored password: " << storedPassword << endl;
+        cout << "Decrypted password: " << decryptedPassword << endl;
+
+        if (decryptedUsername == username && decryptedPassword == password)
+        {
+            userFile.close();
+            return true;
+        }
+    }
+
+    userFile.close();
     return false;
 }
 
 bool UserLogin()
 {
     string username, password;
-    cout << "Enter your username: ";
-    cin >> username;
+
+    cout << "Enter user username: ";
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    getline(cin, username);
+    username.erase(username.find_last_not_of(" \n\r\t") + 1);
+
+    cout << "Entered username: '" << username << "'" << endl;
 
     if (!UserExists(username))
     {
@@ -602,9 +788,13 @@ bool UserLogin()
     while (attempts > 0)
     {
         password = GetPasswordInput();
+        password.erase(password.find_last_not_of(" \n\r\t") + 1);
+        cout << "Entered password: '" << password << "'" << endl;
 
+        cout << "Attempting to authenticate..." << endl;
         if (AuthenticateUser(username, password))
         {
+            cout << "User login successful." << endl;
             return true;
         }
         else
@@ -612,7 +802,7 @@ bool UserLogin()
             attempts--;
             if (attempts > 0)
             {
-                cout << "Incorrect password. You have " << attempts << " attempts left." << endl;
+                cout << "Incorrect credentials. You have " << attempts << " attempts left." << endl;
             }
             else
             {
