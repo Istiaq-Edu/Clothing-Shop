@@ -32,7 +32,7 @@ string GetPasswordInput()
 
 string Encrypt(string data)
 {
-    cout << "Encrypting data...." << endl;
+    // cout << "Encrypting data...." << endl;
 
     for (int i = 0; i < data.length(); i++)
     {
@@ -43,7 +43,7 @@ string Encrypt(string data)
 
 string Decrypt(string data)
 {
-    cout << "Decrypting data...." << endl;
+    // cout << "Decrypting data...." << endl;
     for (int i = 0; i < data.length(); i++)
     {
         data[i] = data[i] ^ KEY[i % KEY.length()];
@@ -70,23 +70,23 @@ bool AdminExists(string username)
     }
 
     string line, storedUsername;
-    cout << "Checking for username: '" << username << "'" << endl;
-    cout << "File contents:" << endl;
+    // cout << "Checking for username: '" << username << "'" << endl;
+    // cout << "File contents:" << endl;
 
     while (getline(adminFile, line))
     {
-        cout << "Read line: '" << line << "'" << endl;
+        // cout << "Read line: '" << line << "'" << endl;
         stringstream ss(line);
         getline(ss, storedUsername, ',');
 
-        cout << "Encrypted stored username: '" << storedUsername << "'" << endl;
+        // cout << "Encrypted stored username: '" << storedUsername << "'" << endl;
         string decryptedUsername = EncryptDecrypt(storedUsername);
-        cout << "Decrypted stored username: '" << decryptedUsername << "'" << endl;
+        // cout << "Decrypted stored username: '" << decryptedUsername << "'" << endl;
 
         if (decryptedUsername == username)
         {
             adminFile.close();
-            cout << "Admin found!" << endl;
+            // cout << "Admin found!" << endl;
             return true;
         }
     }
@@ -97,7 +97,7 @@ bool AdminExists(string username)
     }
     else
     {
-        cout << "Reached end of file" << endl;
+        // cout << "Reached end of file" << endl;
     }
 
     adminFile.close();
@@ -140,7 +140,7 @@ void AdminSignUp()
         cout << "Admin sign up successful!" << endl;
 
         // Print file contents
-        cout << "File contents after sign up:" << endl;
+        // cout << "File contents after sign up:" << endl;
         ifstream readFile("Admins.txt", ios::binary);
         string line;
         while (getline(readFile, line))
@@ -187,10 +187,10 @@ bool AuthenticateAdmin(string username, string password)
         decryptedPassword.erase(decryptedPassword.find_last_not_of(" \n\r\t") + 1);
 
         // Debug output
-        cout << "Stored username: " << storedUsername << endl;
-        cout << "Decrypted username: " << decryptedUsername << endl;
-        cout << "Stored password: " << storedPassword << endl;
-        cout << "Decrypted password: " << decryptedPassword << endl;
+        // cout << "Stored username: " << storedUsername << endl;
+        // cout << "Decrypted username: " << decryptedUsername << endl;
+        // cout << "Stored password: " << storedPassword << endl;
+        // cout << "Decrypted password: " << decryptedPassword << endl;
 
         if (decryptedUsername == username && decryptedPassword == password)
         {
@@ -212,7 +212,7 @@ bool AdminLogin()
     getline(cin, username);
     username.erase(username.find_last_not_of(" \n\r\t") + 1);
 
-    cout << "Entered username: '" << username << "'" << endl;
+    // cout << "Entered username: '" << username << "'" << endl;
 
     if (!AdminExists(username))
     {
@@ -225,9 +225,9 @@ bool AdminLogin()
     {
         password = GetPasswordInput();
         password.erase(password.find_last_not_of(" \n\r\t") + 1);
-        cout << "Entered password: '" << password << "'" << endl;
+        // cout << "Entered password: '" << password << "'" << endl;
 
-        cout << "Attempting to authenticate..." << endl;
+        // cout << "Attempting to authenticate..." << endl;
         if (AuthenticateAdmin(username, password))
         {
             cout << "Admin login successful." << endl;
@@ -251,22 +251,28 @@ bool AdminLogin()
 
 void ListUsers()
 {
-    fstream userFile;
-    userFile.open("Users.txt", ios::in);
-
-    string encryptedUsername, encryptedPassword;
+    ifstream userFile("Users.txt");
+    string line;
 
     cout << "List of users:" << endl;
     cout << "-------------" << endl;
 
     if (userFile.is_open())
     {
-        while (userFile >> encryptedUsername >> encryptedPassword)
+        while (getline(userFile, line))
         {
+            stringstream ss(line);
+            string encryptedUsername;
+            getline(ss, encryptedUsername, ',');
+
             string username = Decrypt(encryptedUsername);
             cout << username << endl;
         }
         userFile.close();
+    }
+    else
+    {
+        cout << "Unable to open Users.txt" << endl;
     }
     cout << "-------------" << endl;
 }
@@ -317,7 +323,7 @@ void RemoveUser(string usernameToRemove)
 
 void AddItem()
 {
-    string code, name, color;
+    string code, name, color, size;
     double price;
     int quantity;
 
@@ -330,6 +336,9 @@ void AddItem()
 
     cout << "Enter item color: ";
     getline(cin, color);
+
+    cout << "Enter item size: ";
+    getline(cin, size);
 
     cout << "Enter item price: ";
     cin >> price;
@@ -344,7 +353,7 @@ void AddItem()
 
     if (itemFile.is_open())
     {
-        itemFile << code << "," << name << "," << color << "," << fixed << setprecision(2) << price << "," << quantity << endl;
+        itemFile << code << "," << name << "," << color << "," << size << "," << fixed << setprecision(2) << price << "," << quantity << endl;
         itemFile.close();
         cout << "Item added successfully!" << endl;
     }
@@ -361,24 +370,25 @@ void ViewItems()
 
     string line;
     cout << "\nList of Items:" << endl;
-    cout << "----------------------------------------------------" << endl;
-    cout << setw(10) << "Code" << setw(20) << "Name" << setw(15) << "Color" << setw(10) << "Price" << setw(10) << "Quantity" << endl;
-    cout << "----------------------------------------------------" << endl;
+    cout << "----------------------------------------------------------------------------------------" << endl;
+    cout << setw(10) << "Code" << setw(20) << "Name" << setw(15) << "Color" << setw(10) << "Size" << setw(10) << "Price" << setw(10) << "Quantity" << endl;
+    cout << "----------------------------------------------------------------------------------------" << endl;
 
     if (itemFile.is_open())
     {
         while (getline(itemFile, line))
         {
             stringstream ss(line);
-            string code, name, color, price, quantity;
+            string code, name, color, size, price, quantity;
 
             getline(ss, code, ',');
             getline(ss, name, ',');
             getline(ss, color, ',');
+            getline(ss, size, ',');
             getline(ss, price, ',');
             getline(ss, quantity, ',');
 
-            cout << setw(10) << code << setw(20) << name << setw(15) << color << setw(10) << price << setw(10) << quantity << endl;
+            cout << setw(10) << code << setw(20) << name << setw(15) << color << setw(10) << size << setw(10) << price << setw(10) << quantity << endl;
         }
         itemFile.close();
     }
@@ -386,7 +396,7 @@ void ViewItems()
     {
         cout << "Error opening file. Unable to view items." << endl;
     }
-    cout << "----------------------------------------------------" << endl;
+    cout << "----------------------------------------------------------------------------------------" << endl;
 }
 
 void RemoveItem(string codeToRemove)
@@ -445,16 +455,16 @@ void SearchItem(string codeToSearch)
     bool itemFound = false;
 
     cout << "\nSearch Results:" << endl;
-    cout << "----------------------------------------------------" << endl;
-    cout << setw(10) << "Code" << setw(20) << "Name" << setw(15) << "Color" << setw(10) << "Price" << setw(10) << "Quantity" << endl;
-    cout << "----------------------------------------------------" << endl;
+    cout << "----------------------------------------------------------------------------------------" << endl;
+    cout << setw(10) << "Code" << setw(20) << "Name" << setw(15) << "Color" << setw(10) << "Size" << setw(10) << "Price" << setw(10) << "Quantity" << endl;
+    cout << "----------------------------------------------------------------------------------------" << endl;
 
     if (itemFile.is_open())
     {
         while (getline(itemFile, line))
         {
             stringstream ss(line);
-            string code, name, color, price, quantity;
+            string code, name, color, size, price, quantity;
 
             getline(ss, code, ',');
 
@@ -462,10 +472,11 @@ void SearchItem(string codeToSearch)
             {
                 getline(ss, name, ',');
                 getline(ss, color, ',');
+                getline(ss, size, ',');
                 getline(ss, price, ',');
                 getline(ss, quantity, ',');
 
-                cout << setw(10) << code << setw(20) << name << setw(15) << color << setw(10) << price << setw(10) << quantity << endl;
+                cout << setw(10) << code << setw(20) << name << setw(15) << color << setw(10) << size << setw(10) << price << setw(10) << quantity << endl;
 
                 itemFound = true;
                 break;
@@ -482,7 +493,169 @@ void SearchItem(string codeToSearch)
     {
         cout << "Error opening file. Unable to search for item." << endl;
     }
-    cout << "----------------------------------------------------" << endl;
+    cout << "----------------------------------------------------------------------------------------" << endl;
+}
+
+void ModifyItem()
+{
+    string codeToModify;
+    cout << "Enter the item code to modify: ";
+    cin >> codeToModify;
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+    fstream itemFile("Items.txt", ios::in);
+    fstream tempFile("temp.txt", ios::out);
+
+    if (!itemFile.is_open() || !tempFile.is_open())
+    {
+        cout << "Error opening files. Unable to modify item." << endl;
+        return;
+    }
+
+    string line;
+    bool itemFound = false;
+
+    while (getline(itemFile, line))
+    {
+        stringstream ss(line);
+        string code, name, color, size, price;
+        int quantity;
+
+        getline(ss, code, ',');
+        getline(ss, name, ',');
+        getline(ss, color, ',');
+        getline(ss, size, ',');
+        getline(ss, price, ',');
+        ss >> quantity;
+
+        if (code == codeToModify)
+        {
+            itemFound = true;
+            int modifyChoice;
+            cout << "\nCurrent item details:" << endl;
+            cout << "Code: " << code << ", Name: " << name << ", Color: " << color
+                 << ", Size: " << size << ", Price: " << price << ", Quantity: " << quantity << endl;
+
+            cout << "\nWhat would you like to modify?" << endl;
+            cout << "1. Code\n2. Name\n3. Color\n4. Size\n5. Price\n6. Quantity\n7. All fields" << endl;
+            cout << "Enter your choice: ";
+            cin >> modifyChoice;
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+            switch (modifyChoice)
+            {
+            case 1:
+                cout << "Enter new code: ";
+                getline(cin, code);
+                break;
+            case 2:
+                cout << "Enter new name: ";
+                getline(cin, name);
+                break;
+            case 3:
+                cout << "Enter new color: ";
+                getline(cin, color);
+                break;
+            case 4:
+                cout << "Enter new size: ";
+                getline(cin, size);
+                break;
+            case 5:
+                cout << "Enter new price: ";
+                cin >> price;
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                break;
+            case 6:
+                cout << "Enter new quantity: ";
+                cin >> quantity;
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                break;
+            case 7:
+                cout << "Enter new code: ";
+                getline(cin, code);
+                cout << "Enter new name: ";
+                getline(cin, name);
+                cout << "Enter new color: ";
+                getline(cin, color);
+                cout << "Enter new size: ";
+                getline(cin, size);
+                cout << "Enter new price: ";
+                cin >> price;
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                cout << "Enter new quantity: ";
+                cin >> quantity;
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                break;
+            default:
+                cout << "Invalid choice. No modifications made." << endl;
+                tempFile << line << endl;
+                continue;
+            }
+
+            tempFile << code << "," << name << "," << color << "," << size << "," << price << "," << quantity << endl;
+            cout << "Item modified successfully!" << endl;
+        }
+        else
+        {
+            tempFile << line << endl;
+        }
+    }
+
+    itemFile.close();
+    tempFile.close();
+
+    if (itemFound)
+    {
+        remove("Items.txt");
+        rename("temp.txt", "Items.txt");
+    }
+    else
+    {
+        remove("temp.txt");
+        cout << "Item with code '" << codeToModify << "' not found." << endl;
+    }
+}
+
+void TrackSale()
+{
+    ifstream saleFile("Sales.txt");
+    string line;
+    double totalRevenue = 0;
+
+    cout << "\nSales Tracking:" << endl;
+    cout << "------------------------------------------------------------------------------------------------" << endl;
+    cout << setw(10) << "Code" << setw(20) << "Name" << setw(10) << "Price" << setw(10) << "Quantity" << setw(15) << "Subtotal" << endl;
+    cout << "------------------------------------------------------------------------------------------------" << endl;
+
+    if (saleFile.is_open())
+    {
+        while (getline(saleFile, line))
+        {
+            stringstream ss(line);
+            string code, name, price;
+            int quantity;
+            getline(ss, code, ',');
+            getline(ss, name, ',');
+            getline(ss, price, ',');
+            ss >> quantity;
+
+            double itemPrice = stod(price);
+            double subtotal = itemPrice * quantity;
+            totalRevenue += subtotal;
+
+            cout << setw(10) << code << setw(20) << name << setw(10) << fixed << setprecision(2) << itemPrice
+                 << setw(10) << quantity << setw(15) << subtotal << endl;
+        }
+        saleFile.close();
+    }
+    else
+    {
+        cout << "Unable to open sales file." << endl;
+        return;
+    }
+
+    cout << "------------------------------------------------------------------------------------------------" << endl;
+    cout << "Total Revenue: TK" << fixed << setprecision(2) << totalRevenue << endl;
 }
 
 void UserManagement()
@@ -529,7 +702,8 @@ void ItemManagement()
         cout << "2. View Items" << endl;
         cout << "3. Remove Item" << endl;
         cout << "4. Search Item" << endl;
-        cout << "5. Back to Admin Dashboard" << endl;
+        cout << "5. Modify Item" << endl;
+        cout << "6. Back to Admin Dashboard" << endl;
         cout << "Enter your choice: ";
         cin >> choice;
 
@@ -558,23 +732,44 @@ void ItemManagement()
         }
         break;
         case 5:
+            ModifyItem();
+            break;
+        case 6:
             cout << "Returning to Admin Dashboard..." << endl;
             break;
         default:
             cout << "Invalid choice. Please try again." << endl;
         }
-    } while (choice != 5);
+    } while (choice != 6);
 }
 void AdminDashboard()
 {
     int choice;
     do
     {
-        cout << "\nAdmin Dashboard" << endl;
-        cout << "1. User Management" << endl;
-        cout << "2. Item Management" << endl;
-        cout << "3. Back to Admin Menu" << endl;
-        cout << "Enter your choice: ";
+        cout << "\033[38;2;255;0;255m";
+        cout << " _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _ \n";
+        cout << "|_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_|\n";
+        cout << "|_|                                                                                                |_|\n";
+        cout << "|_|   _______  ______   _______ _________ _          _______  _______  _        _______  _         |_|\n";
+        cout << "|_|  (  ___  )(  __  \\ (       )\\__   __/( (    /|  (  ____ )(  ___  )( (    /|(  ____ \\( \\        |_|\n";
+        cout << "|_|  | (   ) || (  \\  )| () () |   ) (   |  \\  ( |  | (    )|| (   ) ||  \\  ( || (    \\/| (        |_|\n";
+        cout << "|_|  | (___) || |   ) || || || |   | |   |   \\ | |  | (____)|| (___) ||   \\ | || (__    | |        |_|\n";
+        cout << "|_|  |  ___  || |   | || |(_)| |   | |   | (\\ \\) |  |  _____)|  ___  || (\\ \\) ||  __)   | |        |_|\n";
+        cout << "|_|  | (   ) || |   ) || |   | |   | |   | | \\   |  | (      | (   ) || | \\   || (      | |        |_|\n";
+        cout << "|_|  | )   ( || (__/  )| )   ( |___) (___| )  \\  |  | )      | )   ( || )  \\  || (____/\\| (____/\\  |_|\n";
+        cout << "|_|  |/     \\|(______/ |/     \\|\\_______/|/    )_)  |/       |/     \\||/    )_)(_______/(_______/  |_|\n";
+        cout << "|_| _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _ |_|\n";
+        cout << "|_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_|\n";
+        cout << "|_|                                                                                                |_|\n";
+        cout << "|_| 1. User Management                                                                             |_|\n";
+        cout << "|_| 2. Item Management                                                                             |_|\n";
+        cout << "|_| 3. Track Sales                                                                                 |_|\n";
+        cout << "|_| 4. Back to Admin Menu                                                                          |_|\n";
+        cout << "|_| _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _ |_|\n";
+        cout << "|_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_|\n";
+        cout << "\033[0m";
+        cout << "\n\n\033[34m> Enter your choice: \033[0m";
         cin >> choice;
 
         switch (choice)
@@ -586,22 +781,39 @@ void AdminDashboard()
             ItemManagement();
             break;
         case 3:
+            TrackSale();
+            break;
+        case 4:
             cout << "Returning to Admin Menu..." << endl;
             break;
         default:
             cout << "Invalid choice. Please try again." << endl;
         }
-    } while (choice != 3);
+    } while (choice != 4);
 }
+
 void AdminAccess()
 {
     int choice;
     do
     {
-        cout << "\n1. Admin Sign up" << endl;
-        cout << "2. Admin Login" << endl;
-        cout << "3. Back to main menu" << endl;
-        cout << "Enter your choice: ";
+        cout << "\033[38;2;0;255;255m";
+        cout << " _____                                                                                       _____ \n";
+        cout << "( ___ )-------------------------------------------------------------------------------------( ___ )\n";
+        cout << " |   |                                                                                       |   | \n";
+        cout << " |   | ____ ___  _  _ _ _  _    ____ _  _ ___ _  _ ____ _  _ ___ _ ____ ____ ___ _ ____ _  _ |   | \n";
+        cout << " |   | |__| |  \\ |\\/| | |\\ |    |__| |  |  |  |__| |___ |\\ |  |  | |    |__|  |  | |  | |\\ | |   | \n";
+        cout << " |   | |  | |__/ |  | | | \\|    |  | |__|  |  |  | |___ | \\|  |  | |___ |  |  |  | |__| | \\| |   | \n";
+        cout << " |___|                                                                                       |___| \n";
+        cout << " |___|---------------------------------------------------------------------------------------|___|\n";
+        cout << " |   |                                                                                       |   | \n";
+        cout << " |   | 1. Admin Sign up                                                                      |   |\n";
+        cout << " |   | 2. Admin Login                                                                        |   |\n";
+        cout << " |   | 3. Back to main menu                                                                  |   |\n";
+        cout << " |___|                                                                                       |___|\n";
+        cout << "(_____)-------------------------------------------------------------------------------------(_____)\n";
+        cout << "\033[0m";
+        cout << "\n\n\033[34m> Enter your choice: \033[0m";
         cin >> choice;
 
         switch (choice)
@@ -634,23 +846,23 @@ bool UserExists(string username)
     }
 
     string line, storedUsername;
-    cout << "Checking for username: '" << username << "'" << endl;
-    cout << "File contents:" << endl;
+    // cout << "Checking for username: '" << username << "'" << endl;
+    // cout << "File contents:" << endl;
 
     while (getline(userFile, line))
     {
-        cout << "Read line: '" << line << "'" << endl;
+        // cout << "Read line: '" << line << "'" << endl;
         stringstream ss(line);
         getline(ss, storedUsername, ',');
 
-        cout << "Encrypted stored username: '" << storedUsername << "'" << endl;
+        // cout << "Encrypted stored username: '" << storedUsername << "'" << endl;
         string decryptedUsername = EncryptDecrypt(storedUsername);
-        cout << "Decrypted stored username: '" << decryptedUsername << "'" << endl;
+        // cout << "Decrypted stored username: '" << decryptedUsername << "'" << endl;
 
         if (decryptedUsername == username)
         {
             userFile.close();
-            cout << "User found!" << endl;
+            // cout << "User found!" << endl;
             return true;
         }
     }
@@ -661,7 +873,7 @@ bool UserExists(string username)
     }
     else
     {
-        cout << "Reached end of file" << endl;
+        // cout << "Reached end of file" << endl;
     }
 
     userFile.close();
@@ -704,7 +916,7 @@ void UserSignUp()
         cout << "User sign up successful!" << endl;
 
         // Print file contents
-        cout << "File contents after sign up:" << endl;
+        // cout << "File contents after sign up:" << endl;
         ifstream readFile("Users.txt", ios::binary);
         string line;
         while (getline(readFile, line))
@@ -751,10 +963,10 @@ bool AuthenticateUser(string username, string password)
         decryptedPassword.erase(decryptedPassword.find_last_not_of(" \n\r\t") + 1);
 
         // Debug output
-        cout << "Stored username: " << storedUsername << endl;
-        cout << "Decrypted username: " << decryptedUsername << endl;
-        cout << "Stored password: " << storedPassword << endl;
-        cout << "Decrypted password: " << decryptedPassword << endl;
+        // cout << "Stored username: " << storedUsername << endl;
+        // cout << "Decrypted username: " << decryptedUsername << endl;
+        // cout << "Stored password: " << storedPassword << endl;
+        // cout << "Decrypted password: " << decryptedPassword << endl;
 
         if (decryptedUsername == username && decryptedPassword == password)
         {
@@ -776,7 +988,7 @@ bool UserLogin()
     getline(cin, username);
     username.erase(username.find_last_not_of(" \n\r\t") + 1);
 
-    cout << "Entered username: '" << username << "'" << endl;
+    // cout << "Entered username: '" << username << "'" << endl;
 
     if (!UserExists(username))
     {
@@ -789,9 +1001,9 @@ bool UserLogin()
     {
         password = GetPasswordInput();
         password.erase(password.find_last_not_of(" \n\r\t") + 1);
-        cout << "Entered password: '" << password << "'" << endl;
+        // cout << "Entered password: '" << password << "'" << endl;
 
-        cout << "Attempting to authenticate..." << endl;
+        // cout << "Attempting to authenticate..." << endl;
         if (AuthenticateUser(username, password))
         {
             cout << "User login successful." << endl;
@@ -820,27 +1032,33 @@ void UserViewItems()
 
     string line;
     cout << "\nList of Available Items:" << endl;
-    cout << "----------------------------------------------------" << endl;
-    cout << setw(10) << "Code" << setw(20) << "Name" << setw(15) << "Color" << setw(10) << "Price" << endl;
-    cout << "----------------------------------------------------" << endl;
+    cout << "----------------------------------------------------------------------------------------" << endl;
+    cout << setw(10) << "Code" << setw(20) << "Name" << setw(15) << "Color" << setw(10) << "Size" << setw(10) << "Price" << setw(15) << "Availability" << endl;
+    cout << "----------------------------------------------------------------------------------------" << endl;
 
     if (itemFile.is_open())
     {
         while (getline(itemFile, line))
         {
             stringstream ss(line);
-            string code, name, color, price;
+            string code, name, color, size, price;
             int quantity;
 
             getline(ss, code, ',');
             getline(ss, name, ',');
             getline(ss, color, ',');
+            getline(ss, size, ',');
             getline(ss, price, ',');
             ss >> quantity;
 
+            cout << setw(10) << code << setw(20) << name << setw(15) << color << setw(10) << size << setw(10) << price;
             if (quantity > 0)
             {
-                cout << setw(10) << code << setw(20) << name << setw(15) << color << setw(10) << price << endl;
+                cout << setw(15) << quantity << endl;
+            }
+            else
+            {
+                cout << setw(15) << "Unavailable" << endl;
             }
         }
         itemFile.close();
@@ -849,7 +1067,7 @@ void UserViewItems()
     {
         cout << "Error opening file. Unable to view items." << endl;
     }
-    cout << "----------------------------------------------------" << endl;
+    cout << "----------------------------------------------------------------------------------------" << endl;
 }
 
 void UserSearchItem(string codeToSearch)
@@ -861,16 +1079,16 @@ void UserSearchItem(string codeToSearch)
     bool itemFound = false;
 
     cout << "\nSearch Results:" << endl;
-    cout << "----------------------------------------------------" << endl;
-    cout << setw(10) << "Code" << setw(20) << "Name" << setw(15) << "Color" << setw(10) << "Price" << endl;
-    cout << "----------------------------------------------------" << endl;
+    cout << "----------------------------------------------------------------------------------------" << endl;
+    cout << setw(10) << "Code" << setw(20) << "Name" << setw(15) << "Color" << setw(10) << "Size" << setw(10) << "Price" << setw(15) << "Availability" << endl;
+    cout << "----------------------------------------------------------------------------------------" << endl;
 
     if (itemFile.is_open())
     {
         while (getline(itemFile, line))
         {
             stringstream ss(line);
-            string code, name, color, price;
+            string code, name, color, size, price;
             int quantity;
 
             getline(ss, code, ',');
@@ -879,14 +1097,20 @@ void UserSearchItem(string codeToSearch)
             {
                 getline(ss, name, ',');
                 getline(ss, color, ',');
+                getline(ss, size, ',');
                 getline(ss, price, ',');
                 ss >> quantity;
 
+                cout << setw(10) << code << setw(20) << name << setw(15) << color << setw(10) << size << setw(10) << price;
                 if (quantity > 0)
                 {
-                    cout << setw(10) << code << setw(20) << name << setw(15) << color << setw(10) << price << endl;
-                    itemFound = true;
+                    cout << setw(15) << quantity << endl;
                 }
+                else
+                {
+                    cout << setw(15) << "Unavailable" << endl;
+                }
+                itemFound = true;
                 break;
             }
         }
@@ -894,25 +1118,273 @@ void UserSearchItem(string codeToSearch)
 
         if (!itemFound)
         {
-            cout << "Item with code '" << codeToSearch << "' not found or out of stock." << endl;
+            cout << "Item with code '" << codeToSearch << "' not found." << endl;
         }
     }
     else
     {
         cout << "Error opening file. Unable to search for item." << endl;
     }
-    cout << "----------------------------------------------------" << endl;
+    cout << "----------------------------------------------------------------------------------------" << endl;
 }
+
+void AddToCart(string itemCode)
+{
+    fstream itemFile;
+    itemFile.open("Items.txt", ios::in);
+    fstream cartFile;
+    cartFile.open("Cart.txt", ios::app);
+
+    string line;
+    bool itemFound = false;
+
+    if (itemFile.is_open() && cartFile.is_open())
+    {
+        while (getline(itemFile, line))
+        {
+            stringstream ss(line);
+            string code, name, color, size, price;
+            int quantity;
+
+            getline(ss, code, ',');
+            if (code == itemCode)
+            {
+                getline(ss, name, ',');
+                getline(ss, color, ',');
+                getline(ss, size, ',');
+                getline(ss, price, ',');
+                ss >> quantity;
+
+                if (quantity > 0)
+                {
+                    int quantityToAdd;
+                    cout << "Enter quantity to add to cart (max " << quantity << "): ";
+                    cin >> quantityToAdd;
+
+                    if (quantityToAdd > 0 && quantityToAdd <= quantity)
+                    {
+                        // Add item to cart file
+                        cartFile << code << "," << name << "," << price << "," << quantityToAdd << "\n";
+                        cout << "Added " << quantityToAdd << " of item " << name << " to cart." << endl;
+                        itemFound = true;
+                    }
+                    else
+                    {
+                        cout << "Invalid quantity. Item not added to cart." << endl;
+                    }
+                }
+                else
+                {
+                    cout << "Item is out of stock." << endl;
+                }
+                break;
+            }
+        }
+        itemFile.close();
+        cartFile.close();
+
+        if (!itemFound)
+        {
+            cout << "Item with code '" << itemCode << "' not found." << endl;
+        }
+    }
+    else
+    {
+        cout << "Error opening files. Unable to add item to cart." << endl;
+    }
+}
+
+void ViewCart()
+{
+    ifstream cartFile("Cart.txt");
+    string line;
+    double total = 0;
+
+    cout << "\nYour Cart:" << endl;
+    cout << "------------------------------------------------------------------------------------------------" << endl;
+    cout << setw(10) << "Code" << setw(20) << "Name" << setw(10) << "Size" << setw(10) << "Price" << setw(10) << "Quantity" << setw(15) << "Subtotal" << endl;
+    cout << "------------------------------------------------------------------------------------------------" << endl;
+
+    if (cartFile.is_open())
+    {
+        while (getline(cartFile, line))
+        {
+            stringstream ss(line);
+            string code, name, price, size;
+            int quantity;
+            getline(ss, code, ',');
+            getline(ss, name, ',');
+            getline(ss, size, ',');
+            getline(ss, price, ',');
+            ss >> quantity;
+
+            double itemPrice = stod(price);
+            double subtotal = itemPrice * quantity;
+            total += subtotal;
+
+            cout << setw(10) << code << setw(20) << name << setw(10) << size << setw(10) << fixed << setprecision(2) << itemPrice
+                 << setw(10) << quantity << setw(15) << subtotal << endl;
+        }
+        cartFile.close();
+    }
+    else
+    {
+        cout << "Unable to open cart file." << endl;
+    }
+
+    cout << "------------------------------------------------------------------------------------------------" << endl;
+    cout << "Total: TK" << fixed << setprecision(2) << total << endl;
+}
+
+void RemoveFromCart(string itemCode)
+{
+    ifstream cartFile("Cart.txt");
+    ofstream tempFile("TempCart.txt");
+    string line;
+    bool itemFound = false;
+
+    if (cartFile.is_open() && tempFile.is_open())
+    {
+        while (getline(cartFile, line))
+        {
+            stringstream ss(line);
+            string code;
+            getline(ss, code, ',');
+
+            if (code != itemCode)
+            {
+                tempFile << line << endl;
+            }
+            else
+            {
+                itemFound = true;
+            }
+        }
+
+        cartFile.close();
+        tempFile.close();
+
+        remove("Cart.txt");
+        rename("TempCart.txt", "Cart.txt");
+
+        if (itemFound)
+        {
+            cout << "Item removed from cart." << endl;
+        }
+        else
+        {
+            cout << "Item not found in cart." << endl;
+        }
+    }
+    else
+    {
+        cout << "Unable to open cart file." << endl;
+    }
+}
+
+void CheckOut()
+{
+    ifstream cartFile("Cart.txt");
+    ofstream saleFile("Sales.txt", ios::app); // Open sales file in append mode
+    string line;
+    double total = 0;
+
+    cout << "\nCheckout - Items Purchased:" << endl;
+    cout << "------------------------------------------------------------------------------------------------" << endl;
+    cout << setw(10) << "Code" << setw(20) << "Name" << setw(10) << "Price" << setw(10) << "Quantity" << setw(15) << "Subtotal" << endl;
+    cout << "------------------------------------------------------------------------------------------------" << endl;
+
+    if (cartFile.is_open() && saleFile.is_open())
+    {
+        while (getline(cartFile, line))
+        {
+            stringstream ss(line);
+            string code, name, price, size;
+            int quantity;
+            getline(ss, code, ',');
+            getline(ss, name, ',');
+            getline(ss, size, ',');
+            getline(ss, price, ',');
+            ss >> quantity;
+
+            double itemPrice = stod(price);
+            double subtotal = itemPrice * quantity;
+            total += subtotal;
+
+            cout << setw(10) << code << setw(20) << name << setw(10) << fixed << setprecision(2) << itemPrice
+                 << setw(10) << quantity << setw(15) << subtotal << endl;
+
+            // Record sale in Sales.txt
+            saleFile << code << "," << name << "," << price << "," << quantity << "\n";
+        }
+        cartFile.close();
+        saleFile.close();
+    }
+    else
+    {
+        cout << "Unable to open cart or sales file." << endl;
+        return;
+    }
+
+    cout << "------------------------------------------------------------------------------------------------" << endl;
+    cout << "Total Amount: TK" << fixed << setprecision(2) << total << endl;
+
+    // Clear the cart after checkout
+    ofstream clearCart("Cart.txt", ios::trunc);
+    clearCart.close();
+
+    cout << "\033[38;2;255;128;0m";
+    cout << " /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\ \n";
+    cout << "( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )\n";
+    cout << " > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ < \n";
+    cout << " /\\_/\\                                                                                                                         /\\_/\\ \n";
+    cout << "( o.o )       ::::::::::: :::    :::     :::     ::::    ::: :::    :::      :::   :::  ::::::::  :::    :::         :::      ( o.o )\n";
+    cout << " > ^ <           :+:     :+:    :+:   :+: :+:   :+:+:   :+: :+:   :+:       :+:   :+: :+:    :+: :+:    :+:         :+:        > ^ < \n";
+    cout << " /\\_/\\          +:+     +:+    +:+  +:+   +:+  :+:+:+  +:+ +:+  +:+         +:+ +:+  +:+    +:+ +:+    +:+         +:+         /\\_/\\ \n";
+    cout << "( o.o )        +#+     +#++:++#++ +#++:++#++: +#+ +:+ +#+ +#++:++           +#++:   +#+    +:+ +#+    +:+         +#+         ( o.o )\n";
+    cout << " > ^ <        +#+     +#+    +#+ +#+     +#+ +#+  +#+#+# +#+  +#+           +#+    +#+    +#+ +#+    +#+         +#+           > ^ < \n";
+    cout << " /\\_/\\       #+#     #+#    #+# #+#     #+# #+#   #+#+# #+#   #+#          #+#    #+#    #+# #+#    #+#                        /\\_/\\ \n";
+    cout << "( o.o )     ###     ###    ### ###     ### ###    #### ###    ###         ###     ########   ########          ###            ( o.o )\n";
+    cout << " > ^ <                                                                                                                         > ^ < \n";
+    cout << " /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\  /\\_/\\ \n";
+    cout << "( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )( o.o )\n";
+    cout << " > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ <  > ^ < \n";
+    cout << "\033[0m";
+    cout << endl;
+}
+
 void UserDashboard()
 {
     int choice;
     do
     {
-        cout << "\nWelcome to the Shop" << endl;
-        cout << "1. View Items" << endl;
-        cout << "2. Search Item by Code" << endl;
-        cout << "3. Logout" << endl;
-        cout << "Enter your choice: ";
+        cout << "\033[38;2;255;128;0m";
+        cout << "$$\\      $$\\           $$\\                                          $$$$$$$$\\     $$$$$$$$\\ $$\\                  $$$$$$\\  $$\\                           \n";
+        cout << "$$ |$$\\  $$ |          $$ |                                         \\__$$  __|    \\__$$  __|$$ |                $$  __$$\\ $$ |                          \n";
+        cout << "$$ |$$$\\ $$ | $$$$$$\\  $$ | $$$$$$$\\  $$$$$$\\  $$$$$$\\$$$$\\   $$$$$$\\  $$ | $$$$$$\\  $$ |   $$$$$$$\\   $$$$$$\\  $$ /  \\__|$$$$$$$\\   $$$$$$\\   $$$$$$\\  \n";
+        cout << "$$ $$ $$\\$$ |$$  __$$\\ $$ |$$  _____|$$  __$$\\ $$  _$$  _$$\\ $$  __$$\\ $$ |$$  __$$\\ $$ |   $$  __$$\\ $$  __$$\\ \\$$$$$$\\  $$  __$$\\ $$  __$$\\ $$  __$$\\ \n";
+        cout << "$$$$  _$$$$ |$$$$$$$$ |$$ |$$ /      $$ /  $$ |$$ / $$ / $$ |$$$$$$$$ |$$ |$$ /  $$ |$$ |   $$ |  $$ |$$$$$$$$ | \\____$$\\ $$ |  $$ |$$ /  $$ |$$ /  $$ |\n";
+        cout << "$$$  / \\$$$ |$$   ____|$$ |$$ |      $$ |  $$ |$$ | $$ | $$ |$$   ____|$$ |$$ |  $$ |$$ |   $$ |  $$ |$$   ____|$$\\   $$ |$$ |  $$ |$$ |  $$ |$$ |  $$ |\n";
+        cout << "$$  /   \\$$ |\\$$$$$$$\\ $$ |\\$$$$$$$\\ \\$$$$$$  |$$ | $$ | $$ |\\$$$$$$$\\ $$ |\\$$$$$$  |$$ |   $$ |  $$ |\\$$$$$$$\\ \\$$$$$$  |$$ |  $$ |\\$$$$$$  |$$$$$$$  |\n";
+        cout << "\\__/     \\__| \\_______|\\__| \\_______| \\______/ \\__| \\__| \\__| \\_______|\\__| \\______/ \\__|   \\__|  \\__| \\_______| \\______/ \\__|  \\__| \\______/ $$  ____/ \n";
+        cout << "                                                                                                                                              $$ |      \n";
+        cout << "                                                                                                                                              $$ |      \n";
+        cout << "                                                                                                                                              \\__|      \n";
+        cout << " _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _ \n";
+        cout << "(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)\n";
+        cout << "(_)                                                                                                                                                   (_)\n";
+        cout << "(_) 1. View Items                                                                                                                                     (_)\n";
+        cout << "(_) 2. Search Item by Code                                                                                                                            (_)\n";
+        cout << "(_) 3. Add to Cart                                                                                                                                    (_)\n";
+        cout << "(_) 4. View Cart                                                                                                                                      (_)\n";
+        cout << "(_) 5. Remove from Cart                                                                                                                               (_)\n";
+        cout << "(_) 6. Checkout                                                                                                                                       (_)\n";
+        cout << "(_) 7. Logout                                                                                                                                         (_)\n";
+        cout << "(_) _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _ (_)\n";
+        cout << "(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)(_)\n";
+        cout << "\033[0m";
+
+        cout << "\n\n\033[34m> Enter your choice: \033[0m";
         cin >> choice;
 
         switch (choice)
@@ -929,12 +1401,34 @@ void UserDashboard()
         }
         break;
         case 3:
+        {
+            string itemCode;
+            cout << "Enter the item code to add to cart: ";
+            cin >> itemCode;
+            AddToCart(itemCode);
+        }
+        break;
+        case 4:
+            ViewCart();
+            break;
+        case 5:
+        {
+            string itemCode;
+            cout << "Enter the item code to remove from cart: ";
+            cin >> itemCode;
+            RemoveFromCart(itemCode);
+        }
+        break;
+        case 6:
+            CheckOut();
+            break;
+        case 7:
             cout << "Logging out..." << endl;
             break;
         default:
             cout << "Invalid choice. Please try again." << endl;
         }
-    } while (choice != 3);
+    } while (choice != 7);
 }
 
 void UserAccess()
@@ -942,10 +1436,23 @@ void UserAccess()
     int choice;
     do
     {
-        cout << "\n1. Sign up" << endl;
-        cout << "2. Login" << endl;
-        cout << "3. Back to main menu" << endl;
-        cout << "Enter your choice: ";
+        cout << "\033[38;2;0;255;255m";
+        cout << " _____                                                                                     _____ \n";
+        cout << "( ___ )-----------------------------------------------------------------------------------( ___ )\n";
+        cout << " |   |                                                                                     |   | \n";
+        cout << " |   | _  _ ____ ____ ____    ____ _  _ ___ _  _ ____ _  _ ___ _ ____ ____ ___ _ ____ _  _ |   | \n";
+        cout << " |   | |  | [__  |___ |__/    |__| |  |  |  |__| |___ |\\ |  |  | |    |__|  |  | |  | |\\ | |   | \n";
+        cout << " |   | |__| ___] |___ |  \\    |  | |__|  |  |  | |___ | \\|  |  | |___ |  |  |  | |__| | \\| |   | \n";
+        cout << " |___|                                                                                     |___| \n";
+        cout << " |___|-------------------------------------------------------------------------------------|___|\n";
+        cout << " |   |                                                                                     |   | \n";
+        cout << " |   | 1. Sign up                                                                          |   | \n";
+        cout << " |   | 2. Login                                                                            |   | \n";
+        cout << " |   | 3. Back to main menu                                                                |   | \n";
+        cout << " |___|                                                                                     |___|\n";
+        cout << "(_____)-----------------------------------------------------------------------------------(_____)\n";
+        cout << "\033[0m";
+        cout << "\n\n\033[34m> Enter your choice: \033[0m";
         cin >> choice;
 
         switch (choice)
@@ -973,10 +1480,27 @@ int main()
 
     do
     {
-        cout << "\n1. Admin access" << endl;
-        cout << "2. User access" << endl;
-        cout << "3. Exit" << endl;
-        cout << "Enter your choice: ";
+        cout << "\033[38;2;255;215;0m";
+        cout << " _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _ \n";
+        cout << "|_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_|\n";
+        cout << "|_|                                                                              |_|\n";
+        cout << "|_|  ___  ___      _        ______          _     _                         _    |_|\n";
+        cout << "|_|  |  \\/  |     (_)       |  _  \\        | |   | |                       | |   |_|\n";
+        cout << "|_|  | .  . | __ _ _ _ __   | | | |__ _ ___| |__ | |__   ___   __ _ _ __ __| |   |_|\n";
+        cout << "|_|  | |\\/| |/ _` | | '_ \\  | | | / _` / __| '_ \\| '_ \\ / _ \\ / _` | '__/ _` |   |_|\n";
+        cout << "|_|  | |  | | (_| | | | | | | |/ / (_| \\__ \\ | | | |_) | (_) | (_| | | | (_| |   |_|\n";
+        cout << "|_|  \\_|  |_/\\__,_|_|_| |_| |___/ \\__,_|___/_| |_|_.__/ \\___/ \\__,_|_|  \\__,_|   |_|\n";
+        cout << "|_| _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _ |_|\n";
+        cout << "|_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_|\n";
+        cout << "|_|                                                                              |_|\n";
+        cout << "|_| 1. Admin access                                                              |_|\n";
+        cout << "|_| 2. User access                                                               |_|\n";
+        cout << "|_| 3. Exit                                                                      |_|\n";
+        cout << "|_|                                                                              |_|\n";
+        cout << "|_| _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _ |_|\n";
+        cout << "|_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_||_|\n";
+        cout << "\033[0m";
+        cout << "\n\n\033[34m> Enter your choice: \033[0m";
         cin >> choice;
 
         switch (choice)

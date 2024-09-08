@@ -1,3 +1,4 @@
-A1a,Shirt,RED,299.00,10
 A1b,T-Shirt,BLUE,299.00,10
 A1c,Roundneck T-Shirt,PURPLE,399.00,20
+101,Pajama,Black,M,1000,11
+1,1,1,1,1.00,1
