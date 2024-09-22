@@ -4,13 +4,17 @@
 104,Formal Shirt,Black,L,450.00,10
 105,Formal Shirt,White,L,450.00,10
 106,Formal Shirt,Red,L,450.00,10
-107,Formal Shirt,Blue,L,450.00,10
-108,Formal Shirt,Green,L,450.00,10
-109,Formal Shirt,Black,L,450.00,10
-110,Formal Shirt,White,L,450.00,10
-111,Formal Shirt,Blue,L,450.00,10
-113,Formal Shirt,Green,L,450.00,10
-114,Formal Shirt,Black,L,450.00,10
-911,Pajama,White,L,1100,15
-222,Pant,Black,L,1500.00,20
-1,1,1,1,1.00,1
+107,V-Neck T-Shirt,Gray,M,300.00,20
+108,Polo Shirt,Navy,XL,400.00,12
+109,Denim Jacket,Blue,L,800.00,8
+110,Leather Jacket,Brown,M,1200.00,5
+111,Hoodie,Black,L,600.00,15
+112,Sweater,Beige,S,550.00,10
+113,Cargo Pants,Khaki,L,700.00,8
+114,Jeans,Blue,M,650.00,12
+115,Shorts,Gray,S,350.00,18
+116,Skirt,Black,M,450.00,10
+117,Dress,Floral,L,750.00,7
+118,Blazer,Navy,L,900.00,6
+119,Trench Coat,Beige,XL,1100.00,4
+120,Swimwear,Red,M,250.00,20
