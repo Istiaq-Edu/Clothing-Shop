@@ -8,9 +8,9 @@
 108,Formal Shirt,Green,L,450.00,10
 109,Formal Shirt,Black,L,450.00,10
 110,Formal Shirt,White,L,450.00,10
-111,Formal Shirt,Red,L,450.00,10
-112,Formal Shirt,Blue,L,450.00,10
+111,Formal Shirt,Blue,L,450.00,10
 113,Formal Shirt,Green,L,450.00,10
 114,Formal Shirt,Black,L,450.00,10
 911,Pajama,White,L,1100,15
-202,Pant,Black,L,1500.00,15
+222,Pant,Black,L,1500.00,20
+1,1,1,1,1.00,1
